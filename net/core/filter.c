@@ -1510,6 +1510,49 @@ static const struct bpf_func_proto bpf_skb_load_bytes_proto = {
 	.arg4_type	= ARG_CONST_SIZE,
 };
 
+BPF_CALL_5(bpf_skb_load_bytes_relative, const struct sk_buff *, skb,
+	   u32, offset, void *, to, u32, len, u32, start_header)
+{
+	u8 *end = skb_tail_pointer(skb);
+	u8 *net = skb_network_header(skb);
+	u8 *mac = skb_mac_header(skb);
+	u8 *ptr;
+
+	if (unlikely(offset > 0xffff || len > (end - mac)))
+		goto err_clear;
+
+	switch (start_header) {
+	case BPF_HDR_START_MAC:
+		ptr = mac + offset;
+		break;
+	case BPF_HDR_START_NET:
+		ptr = net + offset;
+		break;
+	default:
+		goto err_clear;
+	}
+
+	if (likely(ptr >= mac && ptr + len <= end)) {
+		memcpy(to, ptr, len);
+		return 0;
+	}
+
+err_clear:
+	memset(to, 0, len);
+	return -EFAULT;
+}
+
+static const struct bpf_func_proto bpf_skb_load_bytes_relative_proto = {
+	.func		= bpf_skb_load_bytes_relative,
+	.gpl_only	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_PTR_TO_CTX,
+	.arg2_type	= ARG_ANYTHING,
+	.arg3_type	= ARG_PTR_TO_UNINIT_MEM,
+	.arg4_type	= ARG_CONST_SIZE,
+	.arg5_type	= ARG_ANYTHING,
+};
+
 BPF_CALL_2(bpf_skb_pull_data, struct sk_buff *, skb, u32, len)
 {
 	/* Idea is the following: should the needed direct read/write
