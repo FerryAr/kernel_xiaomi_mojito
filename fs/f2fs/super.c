@@ -2077,15 +2077,11 @@ static void default_options(struct f2fs_sb_info *sbi)
 		F2FS_OPTION(sbi).active_logs = NR_CURSEG_PERSIST_TYPE;
 
 	F2FS_OPTION(sbi).inline_xattr_size = DEFAULT_INLINE_XATTR_ADDRS;
-	if (le32_to_cpu(F2FS_RAW_SUPER(sbi)->segment_count_main) <=
-							SMALL_VOLUME_SEGMENTS)
-		F2FS_OPTION(sbi).alloc_mode = ALLOC_MODE_REUSE;
-	else
-		F2FS_OPTION(sbi).alloc_mode = ALLOC_MODE_DEFAULT;
-	F2FS_OPTION(sbi).fsync_mode = FSYNC_MODE_STRICT;
+	F2FS_OPTION(sbi).alloc_mode = ALLOC_MODE_DEFAULT;
 #ifdef CONFIG_FS_ENCRYPTION
 	F2FS_OPTION(sbi).inlinecrypt = false;
 #endif
+	F2FS_OPTION(sbi).fsync_mode = FSYNC_MODE_STRICT;
 	F2FS_OPTION(sbi).s_resuid = make_kuid(&init_user_ns, F2FS_DEF_RESUID);
 	F2FS_OPTION(sbi).s_resgid = make_kgid(&init_user_ns, F2FS_DEF_RESGID);
 	if (f2fs_sb_has_compression(sbi)) {
