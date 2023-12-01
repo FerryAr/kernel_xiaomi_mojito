@@ -317,7 +317,7 @@ err_page_ptr_cleared:
 	}
 err_no_vma:
 	if (mm) {
-		git up_write(&mm->mmap_sem);
+		up_write(&mm->mmap_sem);
 		mmput_async(mm);
 	}
 	return vma ? -ENOMEM : -ESRCH;
