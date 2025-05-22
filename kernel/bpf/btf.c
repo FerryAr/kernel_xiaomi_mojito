@@ -1200,6 +1200,35 @@ static void btf_int_log(struct btf_verifier_env *env,
 			 btf_int_encoding_str(BTF_INT_ENCODING(int_data)));
 }
 
+static void btf_bitfield_seq_show(void *data, u8 bits_offset,
+				  u8 nr_bits, struct seq_file *m)
+{
+	u16 left_shift_bits, right_shift_bits;
+	u8 nr_copy_bytes;
+	u8 nr_copy_bits;
+	u64 print_num;
+
+	data += BITS_ROUNDDOWN_BYTES(bits_offset);
+	bits_offset = BITS_PER_BYTE_MASKED(bits_offset);
+	nr_copy_bits = nr_bits + bits_offset;
+	nr_copy_bytes = BITS_ROUNDUP_BYTES(nr_copy_bits);
+
+	print_num = 0;
+	memcpy(&print_num, data, nr_copy_bytes);
+
+#ifdef __BIG_ENDIAN_BITFIELD
+	left_shift_bits = bits_offset;
+#else
+	left_shift_bits = BITS_PER_U64 - nr_copy_bits;
+#endif
+	right_shift_bits = BITS_PER_U64 - nr_bits;
+
+	print_num <<= left_shift_bits;
+	print_num >>= right_shift_bits;
+
+	seq_printf(m, "0x%llx", print_num);
+}
+
 static void btf_int_bits_seq_show(const struct btf *btf,
 				  const struct btf_type *t,
 				  void *data, u8 bits_offset,
